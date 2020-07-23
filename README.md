@@ -17,7 +17,7 @@ Scott.
 
 KNOWN ISSUES:
 
-** Don't expect this repo to be updated much, if at all, I only need Frenzy's source code to help me reverse engineer Berzerk, nothing more  **
+** Don't expect this repo to be updated much, if at all, I only need Frenzy's source code to help me reverse engineer Berzerk, nothing more. I will accept pull requests though  **
 
 Tabs & spacing - I don't care about them. If anyone wants to format them, feel free :) 
 
