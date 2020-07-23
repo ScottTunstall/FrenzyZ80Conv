@@ -21,7 +21,7 @@ KNOWN ISSUES:
 
 Tabs & spacing - I don't care about them. If anyone wants to format them, feel free :) 
 
-Probably bit shift instructions - rarr <reg8> I mapped to rr <reg8> as its a 9 bit carry and only Z80's RR seemed to match
+Probably bit shift instructions - rarr <reg8> I mapped to rr <reg8> as its a 9 bit rotation and only Z80's RR seemed to match
 
 IX and IY register instructions - haven't translated those, not something I wanted to write RegExes for (benefit vs cost wasn't worth it)
 
