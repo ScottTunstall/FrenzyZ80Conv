@@ -228,7 +228,7 @@ SECT2:	bit	WRITE,(hl)		;check if should write
 	ld	B,90H		;xor write
 	ex de,hl
 	call	RtoA
-	ld	SETUP(iy),A	;save magic
+	ld	(iy+SETUP),A	;save magic
 ; get pattern address := @pattern.pointer
 	ex de,hl
 	ld	a,(hl)		;->d.p.l

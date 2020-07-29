@@ -433,10 +433,10 @@ S.ROOM::
 	set	UP,(ix+9)
 	set	RIGHT,(ix+9)
 	set	LEFT,(ix+9)
-	set	DOWN,3(ix)
-	set	UP,15(ix)
-	set	RIGHT,8(ix)
-	set	LEFT,10(ix)
+	set	DOWN,(ix+3)
+	set	UP,(ix+15)
+	set	RIGHT,(ix+8)
+	set	LEFT,(ix+10)
 ;ocupied
 	set	InUse,(ix+9)
 	res	DOWN,(ix+24+15)		;make sure there is

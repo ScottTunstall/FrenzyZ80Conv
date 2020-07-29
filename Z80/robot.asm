@@ -213,10 +213,10 @@ SCLOP:	push	af
 XXX:	pop	ix
 	WAIT	30
 ..test: ld	hl,R.9D
-	ld	a,O.P.L(ix)	;see if on last pattern
+	ld	a,(ix+O.P.L)	;see if on last pattern
 	cp	l
 	jr nz,	..no
-	ld	a,O.P.H(ix)
+	ld	a,(ix+O.P.H)
 	cp	h
 	jr z,	..done
 ..no:	call	NEXT.J
