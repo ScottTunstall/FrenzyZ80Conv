@@ -27,12 +27,12 @@ B>type powerup.asm
 	jr nz,	DSPSW
 	bit	3,A
 	jr nz,	ALIGN
-	lxi	x,ROMTST
+	ld	ix,ROMTST
 	jr	D2
 
 ;MACROS
 .define PCALL[ADR]=[
-	lxi	x,.+4+3
+	ld	ix,.+4+3
 	jp	ADR
 ]
 
@@ -72,7 +72,7 @@ DEL2:	dec	c
 	xor	a
 	out	(40H),a		;tone off
 	out	(50H),a		;tone off
-	pcix
+	jp	(ix)
 ;-------------------
 ; place nmi in here
 ;-------------------
@@ -80,7 +80,7 @@ DEL2:	dec	c
 .ifn	(.-%Zero)-66h,[.error /NMI Address/]
 	out	NMIOFF
 	push	af	;don't change this without fixing nmi in file main
-	ld a,	NMIflg
+	ld	a,NMIflg
 	or	a
 	jr nz,	NMIADD	; do test nmi
 ;	pop	af	;done in nmi
@@ -101,28 +101,28 @@ DEL2:	dec	c
 ;80 error in utility rom [0-Fff]
 ;if i = 0 and there is an error it will halt if no error it will go to romrtn.
 ROMTST:: ld	E,4
-	lxi	x,1000H
+	ld	ix,1000H
 ROM1:	ld	bc,1000H		;bc = 4096
 	ld	H,0		;h = 0
 	ld	L,0FFH		;l = ff
-ROM2:	ld	a,0(x)		;a = [ix]
+ROM2:	ld	a,(ix+0)		;a = [ix]
 	ld	d,a
 	and	l
 	ld	l,a		;l = l and a
 	ld	a,d
 	add	a,H
 	ld	h,a		;h = h + a
-	inx	x		;ix = ix + 1
+	inc	ixx		;ix = ix + 1
 	dec	c
 	jr nz,	ROM2
 	djnz	ROM2		;loop 2048 times
-	ld a,	ROMNUM
+	ld	a,ROMNUM
 	cp	0FFH		;bad system rom
 	jr z,	ROM5
 	ld	a,E
 	cp	2
 	jr nz,	..
-	LXI	X,0C000H
+	ld	ix,0C000H
 ..:	or	a
 	jp	ROM3		;jmp if testing system rom
 	ld	a,l		;test for empty socket
@@ -141,7 +141,7 @@ ROM4:	ld	a,e		;here if chksm = ff or empty socket
 	ld	a,i
 	and	a
 	jr nz,	SCRRAM		;jump to scrram if in sa
-	lxi	x,0		;ix = 0
+	ld	ix,0		;ix = 0
 	ld	E,080H		;e = 80h
 	jr	ROM1		;to rom1 to start new rom
 ROM5:	ld	a,i		;here if checksum error
@@ -186,7 +186,7 @@ EXCLP:	ld	bc,08C0H
 RDLP:	ld	a,(hl)	;read once from each rom and
 	add	hl,bc	;ram chip, write to ram chips
 	xor	a
-	star
+	ld	r,a
 	ld	(1000H),a
 	dec	d
 	jr nz,	RDLP
@@ -223,7 +223,7 @@ OUTLP1: OUTP	A
 ;e = 11 if only errors in bits 0 - 3, or e=10 if errors in both.
 ;if i = 0 then you are in game power up routine and it will halt if
 ;there are errors or go to ramt if no errors.
-SCRRAM: ld hl,	(RAMST)
+SCRRAM: ld	hl,(RAMST)
 	lbcd	RAMS12
 SCR1:	ld	(hl),55H		;fill ram with 55 s
 	dec	hl
@@ -268,7 +268,7 @@ SCR7:	ld	E,12H
 SCR5:	ld	a,i
 	rrcr	A
 	ld	E,20H
-	jnc	RAMT		;to ramt if in game powerup
+	jr nc	RAMT		;to ramt if in game powerup
 	jp	EXCLP
 ;---------------------
 ; report ram errors Part of RAMTST
@@ -284,10 +284,10 @@ CHECK:	ld	a,b		; bad ram bit?
 RET1:	ex de,hl
 	add	hl,hl		; shift test bit
 	ex de,hl
-	jnc	CHECK
+	jr nc	CHECK
 	ld	de,4000H		; wait value
 ..wt:	dec	e
-	ld	a,0(y)		; waste time
+	ld	a,(iy+0)		; waste time
 	jr nz,	..wt
 	dec	d
 	jr nz,	..wt
@@ -507,7 +507,7 @@ RAMT2:	ld	hl,5FFFH
 	ld	a,c
 	or	b
 ..err:	jr nz,	..err
-	lxi	x,SHFTST	;ring bell & led
+	ld	ix,SHFTST	;ring bell & led
 	jp	D0
 ;----------------------------------
 ; cell test for data line problems
@@ -530,7 +530,7 @@ C.LOOP: ld	(hl),d		; write test value
 	ld	(hl),0
 	inc	hl
 	ld	(hl),0
-	pcix
+	jp	(ix)
 ;--------------------------------------
 ; up down test for addressing problems
 ;--------------------------------------
@@ -570,7 +570,7 @@ DONE:	exx
 	ld	a,b		; swap b:c
 	ld	b,c
 	ld	c,a
-	pcix
+	jp	(ix)
 ;-----------------------+
 ; table of ic locations
 ; arranged by bit number
@@ -633,7 +633,7 @@ SHFT5:	ld	a,i
 	jr nz,	SHFT1		;jump if .ne. 16
 	ralr	D		;rotate left the bit pattern
 	jr nc,	SHFT6		; so try all patterns of one bit
-	lxi	x,ALUTST	;go to next test
+	ld	ix,ALUTST	;go to next test
 	jp	D0		;delay, then to alutst
 
 SHFT1:	ld	a,c		;rotate bc right
@@ -658,7 +658,7 @@ SHFT4:	rrcr	B		;e = b flop
 ;and goes to inttst
 
 ALUTST: ld	E,0
-	lxi	x,ALUSIM	;ix = alusim
+	ld	ix,ALUSIM	;ix = alusim
 	ld	hl,6000H		;hl = 6000
 	ld	bc,0101H		;bc = 0101
 ALU2:	ld	a,e
@@ -667,7 +667,7 @@ ALU2:	ld	a,e
 	ld	(4000H),a		;4000h = b
 	ld	(hl),c		;6000h = c
 	ld	a,c
-	pcix		;simulate the alu
+	jp	(ix)		;simulate the alu
 ALURET: xor	(hl)		;xor simulation with [hl]
 	jr nz,	.		;loop if not equal
 	ld	(hl),a		;(6000h) = 0
@@ -684,14 +684,14 @@ ALU1:	ld	d,a		;simulated intercept in bit 7 of d
 	jr nc,	ALU2
 	rlc	c		;rotate c and try again
 	jr nc,	ALU2
-	inx	x
-	inx	x
-	inx	x
+	inc	ixx
+	inc	ixx
+	inc	ixx
 	ld	a,10H		;update alu function
 	add	a,E
 	ld	e,a
 	jr nc,	ALU2
-	lxi	x,INTTST
+	ld	ix,INTTST
 	jp	D0		;delay then to inttst
 ;
 ALUSIM: NOP			;0,a
@@ -736,7 +736,7 @@ INTTST	==	.
 	IM2			;mode 2
 	ld	a,01	;table start
 	ld	i,a		;point to 7fch
-	lxi	x,MAIN
+	ld	ix,MAIN
 	ld	a,0FFH
 	out	(4FH),a		;enable interupt
 	ld	b,a

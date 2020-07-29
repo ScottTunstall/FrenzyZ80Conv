@@ -21,8 +21,8 @@ JobInit::
 ; Pass Control to next job
 ;____________________________
 Next.J::
-	push	y		;pc is on stack
-	push	x		;save all registers
+	push	iy		;pc is on stack
+	push	ix		;save all registers
 	push	hl
 	push	de
 	push	bc
@@ -48,7 +48,7 @@ Next.J::
 	or	a
 	jr nz,	OK1
 	ld	(hl),1b		;reset alternator
-	ld a,	J.Used		;check number of jobs used
+	ld	a,(J.Used)		;check number of jobs used
 	or	a
 	jr z,	OK1		;no man job yet so skip
 	call	MJPtr		;->man job
@@ -63,15 +63,15 @@ GOJ:	ld	hl,SPos-JobLength
 	pop	bc
 	pop	de
 	pop	hl
-	pop	x
-	pop	y
+	pop	ix
+	pop	iy
 	ret			;and pc register too
 ;~~~~~~~~~~~~~~~~~~~~~~
 ; Return from man job
 ;______________________
 Man.Next::
-	push	y		;pc is on stack
-	push	x		;save all registers
+	push	iy		;pc is on stack
+	push	ix		;save all registers
 	push	hl
 	push	de
 	push	bc
@@ -87,8 +87,8 @@ Man.Next::
 ;____________________________
 J.FORK::
 	push	bc		;bc=starting PC for new job
-	push	y		;also get set of input
-	push	x		;registers for parms
+	push	iy		;also get set of input
+	push	ix		;registers for parms
 	push	hl
 	push	de
 	push	bc
@@ -114,8 +114,8 @@ J.FORK::
 	pop	bc
 	pop	de
 	pop	hl
-	pop	x
-	pop	y
+	pop	ix
+	pop	iy
 	pop	bc		;was copy of bc=daughter pc
 	or	a		;nc means no problem
 	ret			;return to mother
@@ -221,7 +221,7 @@ FreeTimer::
 	ld	(hl),0
 	ld	bc,Timer0	;find the offset
 	or	a
-	dsbc	b		;hl=timer number
+	sbc	hl,bc		;hl=timer number
 	ld	a,l
 	cp	24
 	jr nc,	..ret
@@ -248,7 +248,7 @@ FreeTimer::
 ;__________________
 ; input A=number of 60ths to wait
 J.WAIT::
-	pop	y
+	pop	iy
 	call	GetTimer
 	ld	(hl),a
 ..lp:	call	NEXT.J
@@ -256,6 +256,6 @@ J.WAIT::
 	or	a
 	jr nz,	..lp
 	call	FreeTimer
-	pciy
+	jp	(iy)
 
 	.end

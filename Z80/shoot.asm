@@ -20,11 +20,11 @@ SHOOT::
 	ld	a,(hl)		;check timer
 	or	a
 	jr nz,	..exit
-	ld a,	IqFlg
+	ld	a,(IqFlg)
 	bit	2,a
 	jr nz,	..exit
 ; check if bolt available
-	ld a,	Rbolts		;check if shooting
+	ld	a,(RBolts)		;check if shooting
 	or	a
 	jr z,	..exit
 	ld	b,a		;number of bolts useable
@@ -47,7 +47,7 @@ SHOOT::
 ;now check if man is up or down from you
 	ld	a,d		;d=delta x
 	cp	-2
-	jnc	FIREY		;out of range
+	jr nc	FIREY		;out of range
 	cp	8
 	jr c,	FIREY
 ;check for a left or right shot
@@ -103,26 +103,26 @@ FIRE:
 	add	hl,bc		;entry 2
 	add	hl,bc		;4
 	add	hl,bc		;6
-	ld	V.X(x),B	;b=0
-	ld	V.Y(x),B	;robot stops moving
+	ld	(ix+V.X),B	;b=0
+	ld	(ix+V.Y),B	;robot stops moving
 	ld	a,(hl)		;get pattern address
 	inc	hl
 	di
-	ld	D.P.L(x),A
+	ld	(ix+D.P.L),A
 	ld	a,(hl)
-	ld	D.P.H(x),A
+	ld	(ix+D.P.H),A
 	ei
 	inc	hl
-	ld	TIME(x),1	;make it write
+	ld	(ix+TIME),1	;make it write
 	ld	b,(hl)		;xoffset
 	inc	hl
 	ld	c,(hl)		;yoffset
 	inc	hl
 	ld	d,(hl)		;vx.vy
-	ld	a,P.X(x)	;calc offset from robot
+	ld	a,(ix+P.X)	;calc offset from robot
 	add	a,B
 	ld	b,a
-	ld	a,P.Y(x)	;same for y
+	ld	a,(ix+P.Y)	;same for y
 	add	a,C
 	ld	c,a
 	pop	hl		;-> bolt
@@ -144,7 +144,7 @@ FIRE:
 	pop	hl		;timer
 	ld	(hl),10
 ..wlp:	call	NEXT.J
-	bit	INEPT,V.STAT(x)
+	bit	INEPT,(ix+V.STAT)
 	jr nz,	..sk
 	ld	a,(hl)
 	or	a
@@ -157,7 +157,7 @@ FIRE:
 	add	a,a
 	add	a,5		;was 10
 	ld	c,a		;save this delay
-	ld a,	Rwait
+	ld	a,(Rwait)
 	srl	A
 	cp	c		;compare and use
 	jr c,	..t		;lesser delay

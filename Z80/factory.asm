@@ -44,13 +44,13 @@ FACTORY::
 	START	C.IDLE,8,8
 	START	H.IDLE,28,32
 	START	W.CCW,14,29
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	W.CW,19,36
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	pop	bc		;wcw save vector pointers
 	pop	bc		;wccw
 	pop	de		;handle
-	pop	X		;conveyor
+	pop	ix		;conveyor
 ..n:	call	NEXT.J#
 	ld	a,(Robots)
 	or	a
@@ -141,18 +141,18 @@ Plant:
 	DRAW	RFILL,28,36
 ; 4 vectored parts (W.CW,W.CCW,TL,BL)
 	START	TL,12,7
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	BL,12,16
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	W.CCW,8,38
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	W.CW,28,38
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 ; save vector pointers
 	pop	bc
 	pop	de
 	pop	hl
-	pop	x
+	pop	ix
 ..loop: call	NEXT.J
 	call	HitChk
 	jr z,	..loop
@@ -166,9 +166,9 @@ Plant:
 	ld	a,(hl)
 	and	#((1<MOVE)!(1<WRITE))
 	ld	(hl),a
-	ld	a,V.STAT(x)
+	ld	a,(ix+V.STAT)
 	and	#((1<MOVE)!(1<WRITE))
-	ld	V.STAT(x),a
+	ld	(ix+V.STAT),a
 	ei
 	ld	a,2
 	ld	(IqFlg),a		;go for slow moving
@@ -186,14 +186,14 @@ Compu:
 	DRAW	Nose,18,15
 ; 3 vectored parts (CMS,TRCCW,TRCCW)
 	START	CMS,16,2
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	CMouth,12,28
 	START	TRCCW,4,4
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 	START	TRCCW,30,4
-	ld	TPRIME(x),1
+	ld	(ix+TPRIME),1
 ; save vector pointers
-	pop	x
+	pop	ix
 	pop	hl
 	pop	de		;mouth
 	pop	bc		;message
@@ -207,15 +207,15 @@ Compu:
 	ld	a,(hl)
 	and	#(1<MOVE)
 	ld	(hl),a
-	ld	a,V.STAT(x)
+	ld	a,(ix+V.STAT)
 	and	#(1<MOVE)
-	ld	V.STAT(x),a
+	ld	(ix+V.STAT),a
 ;do mouth
 	push	de
-	pop	x
+	pop	ix
 	ld	hl,CMDIE#
-	ld	D.P.H(x),h
-	ld	D.P.L(x),l
+	ld	(ix+D.P.H),h
+	ld	(ix+D.P.L),l
 	ei
 	ld	a,5		;no shoot/iq
 	ld	(IqFlg),a		;go for Crasho
@@ -228,19 +228,19 @@ Compu:
 ;____________________
 PX=1
 PY=2
-HitChk: lxi	y,BUL1
+HitChk: ld	iy,BUL1
 	call	HC
-	lxi	y,BUL1+BLength
+	ld	iy,BUL1+BLength
 	call	HC
 	xor	a
 	ret
 ;
-HC:	ld	a,PX(y)
+HC:	ld	a,PX(iy)
 	cp	XX
 	rc
 	cp	XX+40
 	ret nc
-	ld	a,PY(y)
+	ld	a,PY(iy)
 	cp	YY
 	rc
 	cp	YY+46
@@ -256,7 +256,7 @@ UnReflect:
 	or	a
 	jr nz,	%FUC
 
-	lxi	x,82b0h
+	ld	ix,82b0h
 	ld	de,Hsize
 	call	lin0
 	ld	b,11
@@ -276,7 +276,7 @@ Wallo:	di
 	ei
 	ret
 ;flip style
-%FUC:	lxi	x,864fh		;flip version
+%FUC:	ld	ix,864fh		;flip version
 	ld	de,-Hsize
 	call	lin1
 	ld	b,11
@@ -285,52 +285,52 @@ Wallo:	di
 	jp	wallo
 ;
 Lin0:	ld	b,5
-	push	x
+	push	ix
 	pop	hl
-	ld a,	(Wcolor)
+	ld	a,(Wcolor)
 ..loop: ld	(hl),a
 	inc	hl
 	djnz	..loop
 	ld	b,1
 ;	jp	Sid0
 ;
-Sid0:	ld a,	(Wcolor)
+Sid0:	ld	a,(Wcolor)
 	and	0F0h
 	ld	c,a
-..loop: ld	a,0(x)
+..loop: ld	a,(ix+0)
 	and	0Fh
 	or	c
-	ld	0(x),a
-	ld	a,5(x)
+	ld	(ix+0),a
+	ld	a,(ix+5)
 	and	0Fh
 	or	c
-	ld	5(x),a
-	dadx	d
+	ld	(ix+5),a
+	add	ix,de
 	djnz	..loop
 	ret
 ;
 Lin1:	ld	b,5
-	push	x
+	push	ix
 	pop	hl
-	ld a,	(Wcolor)
+	ld	a,(Wcolor)
 ..loop: ld	(hl),a
 	dec	hl
 	djnz	..loop
 	ld	b,1
 ;	jp	sid1
 ;
-Sid1:	ld a,	(Wcolor)
+Sid1:	ld	a,(Wcolor)
 	and	0Fh
 	ld	c,a
-..loop: ld	a,0(x)
+..loop: ld	a,(ix+0)
 	and	0F0h
 	or	c
-	ld	0(x),a
-	ld	a,-5(x)
+	ld	(ix+0),a
+	ld	a,(ix+-5)
 	and	0F0h
 	or	c
-	ld	-5(x),a
-	dadx	d
+	ld	(ix+-5),a
+	add	ix,de
 	djnz	..loop
 	ret
 ;~~~~~~~~~~~~~~~~~~~~
@@ -340,21 +340,21 @@ Sid1:	ld a,	(Wcolor)
 	ld	a,(Flip)
 	or	a
 	jr nz,	%FC
-	lxi	x,82B0h
+	ld	ix,82B0h
 	ld	de,Hsize-5
 	ld	c,12
 ..y:	ld	b,5
 ..x:	ld	a,(hl)
 	inc	hl
-	ld	0(x),a
-	inx	x
+	ld	(ix+0),a
+	inc	ixx
 	djnz	..x
-	dadx	d
+	add	ix,de
 	dec	c
 	jr nz,	..y
 	ret
 ;
-%FC:	lxi	x,864fh		;flip version
+%FC:	ld	ix,864fh		;flip version
 	ld	de,-Hsize+5
 	ld	c,12
 ..y:	ld	b,5
@@ -364,10 +364,10 @@ Sid1:	ld a,	(Wcolor)
 	rlc
 	rlc
 	rlc
-	ld	0(x),a
-	dcx	x
+	ld	(ix+0),a
+	dec	ix
 	djnz	..x
-	dadx	d
+	add	ix,de
 	dec	c
 	jr nz,	..y
 	ret
@@ -376,8 +376,8 @@ Sid1:	ld a,	(Wcolor)
 ;_____________________
 ChangePat:
 	di
-	ld	D.P.L(x),l
-	ld	D.P.H(x),h
+	ld	(ix+D.P.L),l
+	ld	(ix+D.P.H),h
 	ei
 	ret
 ;~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -400,15 +400,15 @@ ChangePat:
 	pop	hl
 	pop	de
 	rc
-	ld	P.X(x),e
-	ld	P.Y(x),d
-	ld	D.P.L(x),l
-	ld	D.P.H(x),h
-	ld	TIME(x),1
-	ld	TPRIME(x),2
-	ld	V.STAT(x),(1<InUse)!(1<Move)!(1<Write)	
+	ld	(ix+P.X),e
+	ld	(ix+P.Y),d
+	ld	(ix+D.P.L),l
+	ld	(ix+D.P.H),h
+	ld	(ix+TIME),1
+	ld	(ix+TPRIME),2
+	ld	(ix+V.STAT),(1<InUse)!(1<Move)!(1<Write)	
 	pop	hl		;get return address
-	push	x		;save vector pointer
+	push	ix		;save vector pointer
 	jp (hl)			;return 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Set up a square around box 9
@@ -418,33 +418,33 @@ UP=2
 RIGHT=1
 LEFT=0
 S.ROOM::
-	lxi	x,Walls		;set up walls
+	ld	ix,Walls		;set up walls
 ;reflecto
-	set	DOWN,24+9(x)
-	set	UP,24+9(x)
-	set	RIGHT,24+9(x)
-	set	LEFT,24+9(x)
-	set	DOWN,24+3(x)
-	set	UP,24+15(x)
-	set	RIGHT,24+8(x)
-	set	LEFT,24+10(x)
+	set	DOWN,(ix+24+9)
+	set	UP,(ix+24+9)
+	set	RIGHT,(ix+24+9)
+	set	LEFT,(ix+24+9)
+	set	DOWN,(ix+24+3)
+	set	UP,(ix+24+15)
+	set	RIGHT,(ix+24+8)
+	set	LEFT,(ix+24+10)
 ;set walls
-	set	DOWN,9(x)
-	set	UP,9(x)
-	set	RIGHT,9(x)
-	set	LEFT,9(x)
-	set	DOWN,3(x)
-	set	UP,15(x)
-	set	RIGHT,8(x)
-	set	LEFT,10(x)
+	set	DOWN,(ix+9)
+	set	UP,(ix+9)
+	set	RIGHT,(ix+9)
+	set	LEFT,(ix+9)
+	set	DOWN,3(ix)
+	set	UP,15(ix)
+	set	RIGHT,8(ix)
+	set	LEFT,10(ix)
 ;ocupied
-	set	InUse,9(x)
-	res	DOWN,24+15(x)		;make sure there is
-	res	UP,24+21(x)		;a shootable area under
-	res	RIGHT,24+14(x)
-	res	LEFT,24+15(x)
-	res	RIGHT,24+15(x)
-	res	LEFT,24+16(x)
+	set	InUse,(ix+9)
+	res	DOWN,(ix+24+15)		;make sure there is
+	res	UP,(ix+24+21)		;a shootable area under
+	res	RIGHT,(ix+24+14)
+	res	LEFT,(ix+24+15)
+	res	RIGHT,(ix+24+15)
+	res	LEFT,(ix+24+16)
 	ret				;the factory
 ;----------------------------
 FCOLS:	.byte	77h,77h,77h,77h,77h	;top

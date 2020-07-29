@@ -14,22 +14,22 @@ TITLE:: call	CLEAR#
 	call	C.TITLE#	;for now
 	call	CopyR#		;display copyright
 ; display STERN
-	lxi	y,CROSS
-	lxi	x,STERN
+	ld	iy,CROSS
+	ld	ix,STERN
 	ld	hl,12<8!16	;start pos
 	ld	de,5<8!4		;offsets
 	call	PLOTER
 ; display FRENZY
-	lxi	y,SQUARE
-	lxi	x,FRENZY
+	ld	iy,SQUARE
+	ld	ix,FRENZY
 	ld	hl,84<8!16	;start pos
 	ld	de,8<8!5		;offsets
 	call	PLOTER		;**was plotes
 	ret
 ; gamevoer frenzy
 SmallTitle::
-	lxi	y,Little
-	lxi	x,FRENZY
+	ld	iy,Little
+	ld	ix,FRENZY
 	ld	hl,2<8!61	;start pos
 	ld	de,4<8!3		;offsets
 	call	PLOTER
@@ -50,8 +50,8 @@ PLOTES: ld	b,-1
 PLOTER: ld	b,0
 Pl2:	ld	c,1		;first bit mask
 ..lop1: push	hl		;save YX
-	push	x		;save *CharArray
-..lop2: ld	a,0(x)		;check bit for write
+	push	ix		;save *CharArray
+..lop2: ld	a,(ix+0)		;check bit for write
 	and	c		;is bit=1
 	jp z,	..inc		;else skip
 ; plot *iy at H,L
@@ -60,7 +60,7 @@ Pl2:	ld	c,1		;first bit mask
 	push	hl
 	call	RtoAx#		;convert hl
 	ex de,hl
-	push	y		;get ob pointer
+	push	iy		;get ob pointer
 	pop	hl		;to hl
 	call	PLOT#
 	pop	hl		;restore all
@@ -79,11 +79,11 @@ Pl2:	ld	c,1		;first bit mask
 ..inc:	ld	a,l		;x
 	add	e		;xoffset
 	ld	l,a		;x +=offset
-	inx	x		;++CArray
-	ld	a,0(x)		;test if at end of array
-	or	-1(x)		;both 0 means end
+	inc	ixx		;++CArray
+	ld	a,(ix+0)		;test if at end of array
+	or	(ix+-1)		;both 0 means end
 	jr nz,	..lop2		;go do next dot
-	pop	x		;*CA=&start of array
+	pop	ix		;*CA=&start of array
 	pop	hl		;restore X to begin of line
 	ld	a,h		;y
 	add	d		;Yoffset

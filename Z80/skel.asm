@@ -26,11 +26,11 @@ SKEL::
 	xor	a		;stop mode
 	ld	c,-1		;force on
 	call	SETPAT		; set up vector
-RGO:	ld	TPRIME(x),2	;standard wait time
-	ld	TIME(x),1	;update
-	ld	V.STAT(x),86h	;write|move
+RGO:	ld	(ix+TPRIME),2	;standard wait time
+	ld	(ix+TIME),1	;update
+	ld	(ix+V.STAT),86h	;write|move
 	call	GetTimer#
-	ld a,	Rwait		;initial hold off
+	ld	a,(Rwait)		;initial hold off
 	cp	MinWait
 	jr nc,	..1		;safety 1st
 	ld	a,MinWait		;minimum wait
@@ -44,7 +44,7 @@ RGO:	ld	TPRIME(x),2	;standard wait time
 	add	a,b
 	ld	(hl),a
 ..wlp:	call	NEXT.J
-	bit	INEPT,V.STAT(x)
+	bit	INEPT,(ix+V.STAT)
 	jr nz,	..blam
 	ld	a,(hl)
 	or	a
@@ -56,12 +56,12 @@ RGO:	ld	TPRIME(x),2	;standard wait time
 ;------------------
 ; ix->vector
 ; hl->timer
-SEEK:	lxi	y,Vectors	;mans vector
+SEEK:	ld	iy,Vectors	;mans vector
 	push	bc		;save tracker
 ; test if anything happened first??
-	ld	a,P.X(y)	;man x
+	ld	a,P.X(iy)	;man x
 	sub	1
-	sub	P.X(x)		;robot x
+	sub	(ix+P.X)		;robot x
 	ld	d,a		;save delta x
 ;calc x index
 	ld	bc,0		;0 velocity in x
@@ -69,9 +69,9 @@ SEEK:	lxi	y,Vectors	;mans vector
 	ld	B,1		;-	"	in x
 	jr c,	..dx
 	ld	B,2		;+	"	in x
-..dx:	ld	a,P.Y(y)	;man y
+..dx:	ld	a,P.Y(iy)	;man y
 	add	a,2
-	sub	P.Y(x)		;robot y
+	sub	(ix+P.Y)		;robot y
 	ld	e,a		;save delta y
 ;calc y index
 	jr z,	..dy
@@ -91,7 +91,7 @@ SEEK:	lxi	y,Vectors	;mans vector
 	xor	a
 	jr	..ud
 ..1:	bit	0,(hl)		;no iq
-	cz	IQ		;then check walls returns a
+	call z	IQ		;then check walls returns a
 	bit	0,a
 	jr nz,	..go
 	bit	1,a
@@ -103,7 +103,7 @@ SEEK:	lxi	y,Vectors	;mans vector
 	ld	c,a		;update tracker
 	call	SETPAT		;does IQ
 ..sl:	call	NEXT.J
-R.RET:	bit	INEPT,V.STAT(x)
+R.RET:	bit	INEPT,(ix+V.STAT)
 	jp z,	SEEK
 	jp	BLAM#
 ;-----------------------------+
@@ -118,8 +118,8 @@ SETPAT: push	hl
 	inc	hl
 	ld	h,(hl)
 	di
-	ld	D.P.L(x),A	;set pattern
-	ld	D.P.H(x),H
+	ld	(ix+D.P.L),A	;set pattern
+	ld	(ix+D.P.H),H
 	ei
 ..exit: pop	hl
 	ret
@@ -150,11 +150,11 @@ SHOOT:
 	ld	a,(hl)		;check timer
 	or	a
 	jr nz,	..exit
-	ld a,	IqFlg
+	ld	a,(IqFlg)
 	bit	2,a
 	jr nz,	..exit
 ; check if bolt available
-	ld a,	Rbolts		;check if shooting
+	ld	a,(RBolts)		;check if shooting
 	or	a
 	jr z,	..exit
 	ld	b,a		;number of bolts useable
@@ -177,7 +177,7 @@ SHOOT:
 ;now check if man is up or down from you
 	ld	a,d		;d=delta x
 	cp	-2
-	jnc	FIREY		;out of range
+	jr nc	FIREY		;out of range
 	cp	6
 	jr c,	FIREY
 ;check for a left or right shot
@@ -233,26 +233,26 @@ FIRE:
 	add	hl,bc		;entry 2
 	add	hl,bc		;4
 	add	hl,bc		;6
-	ld	V.X(x),B	;b=0
-	ld	V.Y(x),B	;robot stops moving
+	ld	(ix+V.X),B	;b=0
+	ld	(ix+V.Y),B	;robot stops moving
 	ld	a,(hl)		;get pattern address
 	inc	hl
 	di
-	ld	D.P.L(x),A
+	ld	(ix+D.P.L),A
 	ld	a,(hl)
-	ld	D.P.H(x),A
+	ld	(ix+D.P.H),A
 	ei
 	inc	hl
-	ld	TIME(x),1	;make it write
+	ld	(ix+TIME),1	;make it write
 	ld	b,(hl)		;xoffset
 	inc	hl
 	ld	c,(hl)		;yoffset
 	inc	hl
 	ld	d,(hl)		;vx.vy
-	ld	a,P.X(x)	;calc offset from robot
+	ld	a,(ix+P.X)	;calc offset from robot
 	add	a,b
 	ld	b,a
-	ld	a,P.Y(x)	;same for y
+	ld	a,(ix+P.Y)	;same for y
 	add	a,c
 	ld	c,a
 	pop	hl		;-> bolt
@@ -274,7 +274,7 @@ FIRE:
 	pop	hl		;timer
 	ld	(hl),10
 ..wlp:	call	NEXT.J
-	bit	INEPT,V.STAT(x)
+	bit	INEPT,(ix+V.STAT)
 	jr nz,	..sk
 	ld	a,(hl)
 	or	a
@@ -287,7 +287,7 @@ FIRE:
 	add	a,a
 	add	a,5		;was 10
 	ld	c,a		;save this delay
-	ld a,	Rwait
+	ld	a,(Rwait)
 	srl	A
 	cp	c		;compare and use
 	jr c,	..t		;lesser delay

@@ -22,10 +22,10 @@ ORWRITE ==	10H
 ;_______________________________
 RoomLeft::
 	call	RINIT
-	set	BLEFT,0+24(x)
-	set	BLEFT,6+24(x)
-	set	BLEFT,12+24(x)
-	set	BLEFT,18+24(x)
+	set	BLEFT,(ix+24)
+	set	BLEFT,(ix+24+6)
+	set	BLEFT,(ix+24+12)
+	set	BLEFT,(ix+24+18)
 	ld hl, (ManX))
 	ld	l,h		;get y
 	ld	h,240		;set x
@@ -39,10 +39,10 @@ RoomLeft::
 ;_______________________________
 RoomRight::
 	call	RINIT
-	set	BRIGHT,5+24(x)
-	set	BRIGHT,11+24(x)
-	set	BRIGHT,17+24(x)
-	set	BRIGHT,23+24(x)
+	set	BRIGHT,(ix+24+5)
+	set	BRIGHT,(ix+24+11)
+	set	BRIGHT,(ix+24+17)
+	set	BRIGHT,(x+24+23)
 	ld hl, (ManX))
 	ld	l,h		;get y
 	ld	h,16		;set x
@@ -56,12 +56,12 @@ RoomRight::
 ;_______________________________
 RoomDown::
 	call	RINIT
-	set	BDOWN,18+24(x)
-	set	BDOWN,19+24(x)
-	set	BDOWN,20+24(x)
-	set	BDOWN,21+24(x)
-	set	BDOWN,22+24(x)
-	set	BDOWN,23+24(x)
+	set	BDOWN,(ix+24+18)
+	set	BDOWN,(ix+24+19)
+	set	BDOWN,(ix+24+20)
+	set	BDOWN,(ix+24+21)
+	set	BDOWN,(ix+24+22)
+	set	BDOWN,(ix+24+23)
 	ld hl, (ManX)
 	ld	h,l		;get x
 	ld	l,16		;set y
@@ -75,12 +75,12 @@ RoomDown::
 ;_______________________________
 RoomUp::
 	call	RINIT
-	set	BUP,0+24(x)
-	set	BUP,1+24(x)
-	set	BUP,2+24(x)
-	set	BUP,3+24(x)
-	set	BUP,4+24(x)
-	set	BUP,5+24(x)
+	set	BUP,(ix+24+0)
+	set	BUP,(ix+24+1)
+	set	BUP,(ix+24+2)
+	set	BUP,(ix+24+3)
+	set	BUP,(ix+24+4)
+	set	BUP,(ix+24+5)
 	ld hl, (ManX)
 	ld	h,l		;get x
 	ld	l,180		;set y
@@ -96,7 +96,7 @@ ROOM::	ld	hl,RoomCnt
 	dec	(hl)
 	call	RINIT
 ; generate walls bits
-DoRo:	lxi	x,WALLS
+DoRo:	ld	ix,WALLS
 	call	ROW
 	call	ROW
 	call	ROW
@@ -106,7 +106,7 @@ DoRo:	lxi	x,WALLS
 	call	Wdot		;add white dots
 	call	SHOWS
 ; show number of deaths left
-SHOWD:: ld a,	PLAYER
+SHOWD:: ld	a,(PLAYER)
 	cp	2
 	XY	56,213
 	jr nz,	DPI
@@ -115,7 +115,7 @@ DPI:	ld	B,0
 	call	RtoA
 	ex de,hl
 	ex af,af'
-	ld a,	DEATHS
+	ld	a,(DEATHS)
 	ld	b,a
 	ex af,af'
 	dec	b
@@ -133,7 +133,7 @@ DLP:	push	bc
 ..:	ex af,af'
 	pop	bc
 	djnz	DLP
-SSE:	ld a,	Demo		;if demo,show credits
+SSE:	ld	a,(Demo)		;if demo,show credits
 	or	a
 	call nz,	CREDS
 	ret
@@ -153,64 +153,64 @@ ROW:	ld	b,5
 	jz	RIGHT
 	jp	LEFT
 ..ret:	pop	bc		;move to next column
-	inx	x
+	inc	ixx
 	djnz	..lp
-	inx	x
+	inc	ixx
 	ret
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;  Wall setting routines
 ;_______________________________
-DOWN:	set	BRIGHT,6(x)
-	set	BLEFT,7(x)
-	ld a,	SEED		;reflecto wall?
+DOWN:	set	BRIGHT,(ix+6)
+	set	BLEFT,(ix+7)
+	ld	a,(SEED)		;reflecto wall?
 	rlc
 	ret nc
-	set	BRIGHT,24+6(x)	;set reflecto
-	set	BLEFT,24+7(x)
+	set	BRIGHT,(ix+30)	;set reflecto
+	set	BLEFT,(ix+32)
 	ret
 ;
-UP:	set	BRIGHT,0(x)
-	set	BLEFT,1(x)
-	ld a,	SEED
+UP:	set	BRIGHT,(ix+0)
+	set	BLEFT,(ix+1)
+	ld	a,(SEED)
 	rlc
 	ret nc
-	set	BRIGHT,24+0(x)
-	set	BLEFT,24+1(x)
+	set	BRIGHT,(ix+24)
+	set	BLEFT,(ix+25)
 	ret
 ;
-RIGHT:	set	BDOWN,1(x)
-	set	BUP,7(x)
-	ld a,	SEED
+RIGHT:	set	BDOWN,(ix+1)
+	set	BUP,(ix+7)
+	ld	a,(SEED)
 	rlc
 	ret nc
-	set	BDOWN,24+1(x)
-	set	BUP,24+7(x)
+	set	BDOWN,(ix+25)
+	set	BUP,(ix+32)
 	ret
 ;
-LEFT:	set	BDOWN,0(x)
-	set	BUP,6(x)
-	ld a,	SEED
+LEFT:	set	BDOWN,(ix+0)
+	set	BUP,(ix+6)
+	ld	a,(SEED)
 	rlc
 	ret nc
-	set	BDOWN,24+0(x)
-	set	BUP,24+6(x)
+	set	BDOWN,(ix+24)
+	set	BUP,(ix+30)
 	ret
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;	Draw a Room
 ;_______________________________
 RoomDraw:
 	ld	h,4
-	lxi	x,walls
+	ld	ix,walls
 	ld	bc,(4<8)!(1<BUP)
 ..lp:	call	HORIZ
 	ld	a,48
 	add	a,h
 	ld	h,a
 	djnz	..lp
-	lxi	x,walls+(3*6)	; do last wall
+	ld	ix,walls+(3*6)	; do last wall
 	ld	c,1<BDOWN
 	call	HORIZ
-	lxi	x,walls		; do verticals
+	ld	ix,walls		; do verticals
 	ld	bc,(6<8)!(1<BLEFT)
 	ld	L,8
 ..kp:	call	VERT
@@ -218,7 +218,7 @@ RoomDraw:
 	add	a,l
 	ld	l,a
 	djnz	..kp
-	dcx	x		;do last vert wall
+	dec	ix		;do last vert wall
 	ld	c,1<BRight
 	call	VERT
 	ret
@@ -230,23 +230,23 @@ HORIZ:	push	bc
 	ld	b,6
 ..lp:	push	hl
 	push	bc
-	ld	a,24(x)		;check reflecto wall
+	ld	a,(ix+24)		;check reflecto wall
 	and	c
 	jr z,	..nor		;0=non reflecto
-	ld	a,0(x)
+	ld	a,(ix+0)
 	and	c
 	jr z,	..sq
 	call	HWR
 	jr	..open
 ..sq:	call	HWS
 	jr	..open
-..nor:	ld	a,0(x)
+..nor:	ld	a,(ix+0)
 	and	c
 	jr z,	..open
 	call	HWB
 ..open: pop	bc
 	pop	hl
-	inx	x
+	inc	ixx
 	ld	a,40
 	add	a,l
 	ld	l,a
@@ -261,30 +261,30 @@ VERT:	push	bc
 	ld	b,4
 ..lp:	push	hl
 	push	bc
-	ld	a,24(x)		;check reflecto wall
+	ld	a,(ix+24)		;check reflecto wall
 	and	c
 	jr z,	..nor		;0=non reflecto
-	ld	a,0(x)
+	ld	a,(ix+0)
 	and	c
 	jr z,	..sq
 	call	VWR
 	jr	..open
 ..sq:	call	VWS
 	jr	..open
-..nor:	ld	a,0(x)
+..nor:	ld	a,(ix+0)
 	and	c
 	jr z,	..open
 	call	VWB
 ..open: pop	bc
 	pop	hl
 	ld	de,6
-	dadx	d
+	add	ix,de
 	ld	a,48
 	add	a,h
 	ld	h,a
 	djnz	..lp
 	ld	de,-(6*4)+1
-	dadx	d
+	add	ix,de
 	pop	bc
 	ret
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -413,8 +413,8 @@ RELOR:	ld	B,ORWRITE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Initialize walls arrays etc
 ;_______________________________
-RINIT:	ld hl,	(RoomX)		;put room number
-	shld	SEED		;in seed
+RINIT:	ld	hl, (RoomX)		;put room number
+	ld	(SEED),hl		;in seed
 ;erase message area
 	ld	a,(Flip)
 	or	a
@@ -438,8 +438,8 @@ RINIT:	ld hl,	(RoomX)		;put room number
 	ld	hl,R.DATA
 	ldir
 ;generate doors - TOP
-	lxi	x,Walls
-	ld hl,	(RoomX)		;get coords
+	ld	ix,Walls
+	ld	hl,(RoomX)		;get coords
 	ld	a,l		;get y
 	and	3
 	ld	e,a
@@ -450,11 +450,11 @@ RINIT:	ld hl,	(RoomX)		;put room number
 	add	hl,de		;3
 	add	hl,hl
 	ex de,hl
-	dadx	d		;6*
-	RES	BLEFT,0(x)	;set door bit
+	add	ix,de		;6*
+	RES	BLEFT,(ix+0)	;set door bit
 ;right
-	lxi	x,Walls
-	ld hl,	(RoomX)		;get coords
+	ld	ix,Walls
+	ld	hl,(RoomX)		;get coords
 	ld	a,l		;get x
 	inc	a
 	and	3
@@ -466,29 +466,29 @@ RINIT:	ld hl,	(RoomX)		;put room number
 	add	hl,de		;3
 	add	hl,hl
 	ex de,hl
-	dadx	d		;6*
-	RES	BRIGHT,5(x)	;set door bit
+	add	ix,de		;6*
+	RES	BRIGHT,(ix+5)	;set door bit
 ;top
-	lxi	x,Walls
-	ld hl,	(RoomX)		;get coords
+	ld	ix,Walls
+	ld	hl,(RoomX)		;get coords
 	ld	a,h		;get y
 	and	3
 	inc	a
 	ld	e,a
 	ld	d,0
-	dadx	d
-	RES	BUP,0(x)	;set door bit
+	add	ix,de
+	RES	BUP,(ix+0)	;set door bit
 ;bottom
-	lxi	x,Walls
-	ld hl,	(RoomX)		;get coords
+	ld	ix,Walls
+	ld	hl,(RoomX)		;get coords
 	ld	a,h		;get y
 	inc	a
 	and	3
 	inc	a
 	ld	e,a
 	ld	d,0
-	dadx	d
-	RES	BDOWN,18(x)	;set door bit
+	add	ix,de
+	RES	BDOWN,(ix+18)	;set door bit
 ;inc number of rooms seen
 	ld	hl,RoomCnt
 	inc	(hl)		;inc room count
@@ -502,8 +502,8 @@ RINIT:	ld hl,	(RoomX)		;put room number
 	or	a
 	jr z,	..skw
 	and	3		;test for special room
-	cz	S.ROOM#
-..skw:	lxi	x,Walls		;everyone needs this
+	call z,	S.ROOM#
+..skw:	ld	ix,Walls		;everyone needs this
 	ret
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Put white dot around edge
@@ -535,7 +535,7 @@ Cdot:	push	bc		;save YX
 	or	a
 	jz	..norm
 	ld	hl,EndColor
-	dsbc	b		;subtract box offset
+	sbc	hl,bc		;subtract box offset
 	pop	bc		;restore YX
 	ex af,af'
 	ccf			;complement hi/lo
@@ -559,7 +559,7 @@ Cdot:	push	bc		;save YX
 ..auk:	ld	a,(hl)		;get 2 color boxes
 	and	d		;mask valid part
 	ld	d,a		;save
-	ld a,	Dcolor		;get dot color
+	ld	a,(Dcolor)		;get dot color
 	and	e		;isolate nibble
 	or	d		;combine nibbles
 	ld	(hl),a		;store new color

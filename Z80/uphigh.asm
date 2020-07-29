@@ -139,7 +139,7 @@ NEW.HI: pop	de		;get pointer to high score beaten
 	LANG	Line3
 	call	GetTimer#
 	push	hl
-	pop	y		;iy->timer
+	pop	iy		;iy->timer
 ;get letters
 	ld	B,0
 	ld	hl,96*256+120	;start char
@@ -160,13 +160,13 @@ S.L:	push	bc
 	ld	a,(Flip)		;0 or 8=flop
 	call	SHOWC
 	pop	bc
-	ld	0(y),15
+	ld	(iy+0),15
 ..wlp:	call	NEXT.J
-	ld	a,0(y)
+	ld	a,(iy+0)
 	or	a
 	jr nz,	..wlp
-T.L:	ld	0(y),60		;sixty ticks to a second
-I.L:	ld	a,0(y)		;if a second is up
+T.L:	ld	(iy+0),60		;sixty ticks to a second
+I.L:	ld	a,(iy+0)		;if a second is up
 	or	a
 	jr nz,	I.S
 	ld	a,(DEATHS)		;then if[[--wait.time]==0]

@@ -67,10 +67,10 @@ INT:	out	(NMIOFF),a		;turn off nmi's
 	ld	(hl),60		;reset seconds timer
 	ld	c,8		;inc total seconds in backgnd
 	call	ItemInc#	;pushes all reg used
-	ld a,	DEMO
+	ld	a,(Demo)
 	or	a
 	ld	c,7		;total game time
-	cz	ItemInc
+	call z,	ItemInc
 	ld	hl,KWait		;adjust kill off
 	ld	a,(hl)
 	or	a
@@ -89,7 +89,7 @@ I.but:	in	a,(I.O2)		;check start button[s]
 	cpl
 	and	l
 	ld	l,a		;save buttons
-	ld a,	StartB		;previous buttons
+	ld	a,(StartB)		;previous buttons
 	or	l
 	ld	(StartB),a		;save for main
 	jp z,	..exit
@@ -101,8 +101,8 @@ I.but:	in	a,(I.O2)		;check start button[s]
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Bottom of Screen Interrupt
 ;_______________________________
-BS:	push	y		;save old jobs
-	push	x
+BS:	push	iy		;save old jobs
+	push	ix
 	push	hl
 	push	de
 	push	bc
@@ -110,27 +110,27 @@ BS:	push	y		;save old jobs
 	push	af
 ;< do color man every 4 int?>
 	ld	hl,0		;null vector pointer
-	ld	(hl),OLD1
-	ld	(hl),OLD2
-	ld	(hl),OLD3
+	ld	(OLD1),hl
+	ld	(OLD2),hl
+	ld	(OLD3),hl
 	ld	hl,Inttyp	;test alternator
 	rlcr	m		;by rotating the bits
 	ld	b,3		;do 2 others if no man
-	ld hl,	(L.PTR)		;robot list pointer
+	ld	hl,(L.PTR)		;robot list pointer
 	jc	..ilp
 	ld	hl,Vectors
-	ld	(hl),Old3		;save for updates
+	ld	(Old3),hl		;save for updates
 	call	SECT1		;rewrite man
 	call	UNCMAN#		;uncolor man
 	ld	hl,Vectors
 	bit	COLOR,(hl)		;do color
 	call nz,	COLMAN#
-	ld hl,	(L.PTR)		;robot list pointer
+	ld	hl,(L.PTR)		;robot list pointer
 	ld	b,2		;# of robots to do
 ..ilp:	push	bc
 	call	SECT1		;rewrite robot
 	pop	bc
-	ld hl,	(V.PTR)		;Get vector pointer
+	ld	hl,(V.PTR)		;Get vector pointer
 ; save pointer for later update
 	ex de,hl
 	ld	a,b		;get index
@@ -160,15 +160,15 @@ BS:	push	y		;save old jobs
 	djnz	..ilp
 	jp	..done
 ..end:	ld	hl,Vectors+VLEN	;first non-man vector
-..done: ld	(hl),L.PTR		;next one to look at
+..done: ld	(L.PTR),hl		;next one to look at
 	call	BUL.V#		;rewrite & vector bolts
 ; now that bolts have done hitting things
 ; update Vectors (coordinates)
-	ld hl,	(OLD3)		;first vector written
+	ld	hl,(OLD3)		;first vector written
 	call	SECT3
-	ld hl,	(OLD2)
+	ld	hl,(OLD2)
 	call	SECT3
-	ld hl,	(OLD1)		;last vector written
+	ld	hl,(OLD1)		;last vector written
 	call	SECT3		;update animation and vector
 	call	TIMERS		;do job timers
 	pop	af		;restore all registers
@@ -176,8 +176,8 @@ BS:	push	y		;save old jobs
 	pop	bc
 	pop	de
 	pop	hl
-	pop	x
-	pop	y
+	pop	ix
+	pop	iy
 BYE:	ld	a,1		;turn on interrupts
 	out	(I.ENAB),a
 	out	(NMION),a		;prob get nmi immed'ly
@@ -193,7 +193,7 @@ BYE:	ld	a,1		;turn on interrupts
 ;----------------
 ; erase pattern
 ;________________
-SECT1:	ld	(hl),V.PTR
+SECT1:	ld	(V.PTR),hl
 	liyd	V.PTR
 	bit	ERASE,(hl)		;hl->v.stat
 	jp z,	SECT2
@@ -211,7 +211,7 @@ SECT1:	ld	(hl),V.PTR
 	ld	h,(hl)
 	ld	l,a
 	call	PLOT		;xor write
-	ld hl,	(V.PTR)
+	ld	hl,(V.PTR)
 ;----------------
 ; write pattern
 ;----------------
@@ -228,7 +228,7 @@ SECT2:	bit	WRITE,(hl)		;check if should write
 	ld	B,90H		;xor write
 	ex de,hl
 	call	RtoA
-	ld	SETUP(y),A	;save magic
+	ld	SETUP(iy),A	;save magic
 ; get pattern address := @pattern.pointer
 	ex de,hl
 	ld	a,(hl)		;->d.p.l
@@ -254,17 +254,17 @@ SECT2:	bit	WRITE,(hl)		;check if should write
 	ld	a,(Flip)
 	or	a
 	jp z,	..down
-	dsbc	b
+	sbc	hl,bc
 	.byte	(3eh)		;mvi a,(dad b)
 ..down: add	hl,bc
 	ex de,hl
 ; store pattern away
-..noo:	ld	O.P.L(y),L
-	ld	O.P.H(y),H
-	ld	O.A.L(y),E	;save screen address
-	ld	O.A.H(y),D
+..noo:	ld	O.P.L(iy),L
+	ld	O.P.H(iy),H
+	ld	O.A.L(iy),E	;save screen address
+	ld	O.A.H(iy),D
 	call	PLOT
-	ld hl,	(V.PTR)
+	ld	hl,(V.PTR)
 ; check intercept
 	in	WHATI
 	bit	7,A		;nz means 1 writtn over 1
@@ -280,7 +280,7 @@ SECT3:	ld (V.PTR),hl
 	bit	MOVE,(hl)		;should be moved?
 	ret z
 	push	hl
-	pop	y		;iy->vector
+	pop	iy		;iy->vector
 ; MOVE bit reset by routine that set it
 	ld	de,TPRIME
 	add	hl,de		;->tprime
@@ -325,7 +325,7 @@ SECT3:	ld (V.PTR),hl
 	dec	hl
 	ld	(hl),e		;->d.p.l
 	ld	a,(1<Write)!(1<Erase)
-	ld hl,	(V.Ptr)
+	ld	hl,(V.Ptr)
 	or	(hl)		;or with V.STAT
 	ld	(hl),A
 	ret

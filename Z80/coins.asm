@@ -49,7 +49,7 @@ CREDS:
 ;	Get Credits into A
 ;--------------------------------------
 GetC:
-	ld a,	(CREDITS+1)	;load low nibble of credits
+	ld	a,(CREDITS+1)	;load low nibble of credits
 	rrc			;which is in high nibble
 	rrc			;battery ram
 	rrc			;into low nibble of A

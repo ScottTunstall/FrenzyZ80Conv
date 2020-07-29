@@ -16,11 +16,11 @@ PLAYDEMO::
 	ld	de,SavedScore
 	call	ScoreMove
 
-	ld hl,	(Seed)
+	ld	hl,(Seed)
 	push	hl
 
 	ld	hl,DemoData	;fake the control
-	ld	(hl),DemoPtr		; inputs data
+	ld	(DemoPtr),hl		; inputs data
 
 	ld	a,-1		;set to demo mode
 	ld	(Demo),a
@@ -36,7 +36,7 @@ PLAYDEMO::
 
 	pop	hl		;restore random number seed
 	push	af		;save button status
-	ld	(hl),Seed
+	ld	(Seed),hl
 	call	RANDOM		;do another randomize
 
 	call	ScorePtr	;restore old player score
@@ -66,7 +66,7 @@ ZapLoop:
 ;--------------------------------------
 RANDOM::
 	push	hl
-	ld hl,	(Seed)
+	ld	hl,(Seed)
 	ld	d,h
 	ld	e,l
 	add	hl,hl
@@ -75,7 +75,7 @@ RANDOM::
 	add	hl,de
 	ld	de,3153H
 	add	hl,de
-	ld	(hl),Seed
+	ld	(Seed),hl
 	ld	a,h
 	pop	hl
 	ret

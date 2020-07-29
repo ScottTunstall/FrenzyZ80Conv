@@ -19,8 +19,8 @@ LEFT	==	0
 ;a=new DURL, c=old DURL, ix->vector, iy->mans
 IQ::	push	bc		;save tracker
 	push	de
-	ld	l,D.P.L(x)	;get height thru
-	ld	h,D.P.H(x)	;pattern pointer
+	ld	l,(ix+D.P.L)	;get height thru
+	ld	h,(ix+D.P.H)	;pattern pointer
 	ld	e,(hl)
 	inc	hl
 	ld	d,(hl)
@@ -32,8 +32,8 @@ IQ::	push	bc		;save tracker
 	srl	A		;h/2
 	add	a,1		;(h/2)+2
 	ld	e,a		;number of lines to test
-	ld	h,P.Y(x)	;get current position
-	ld	l,P.X(x)
+	ld	h,(ix+P.Y)	;get current position
+	ld	l,(ix+P.X)
 ; Regs: HL=YXpos, E=height, c=DURL to test
 ; Down tests
 	bit	DOWN,d
@@ -151,7 +151,7 @@ CheckBox:
 	ld	a,(hl)		;get normal screen
 	ld	(TEMP+(1<13)),a	;magic scratch
 	ei
-	ld a,	TEMP		;normal scratch
+	ld	a,(TEMP)		;normal scratch
 	and	1		;check it
 	pop	hl		;restore YX
 	ret

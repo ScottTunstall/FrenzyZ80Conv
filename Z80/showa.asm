@@ -77,7 +77,7 @@ RtoA::	ld	a,(Flip)
 	ld	c,l
 	ld	hl,Hsize*224+MagicScreen-1
 	or	a
-	dsbc	b
+	sbc	hl,bc
 	ret
 ;-------------------
 ; show a character

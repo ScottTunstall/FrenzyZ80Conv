@@ -19,7 +19,7 @@ NMI::
 	push	hl
 	call	S.BOOK#		;CHECK CLEAR BUTTON
 	jr nz,	BOOKS#
-	ld a,	(Demo)
+	ld	a,(Demo)
 	or	a
 	jr z,	..ok
 	ld	a,1
@@ -28,10 +28,10 @@ NMI::
 ..ok:	call	SCPU		;0=NORMAL
 ..no:	call	C.LOAD
 ; Do voice if not demo
-	ld a,	(Demo)
+	ld	a,(Demo)
 	or	a
 	jr nz,	..stop
-	ld hl,	(V.PC)		;GET VOICE PC
+	ld	hl,(V.PC)		;GET VOICE PC
 ..lop:	ld	a,h		;IF 0 SKIP
 	or	l
 	jr z,	..exit
@@ -118,7 +118,7 @@ SCPU::	ld a, (RFSND)
 	ld a, (WLSND)
 	or	a
 	call nz,    WSND
-	ld hl,	(PC0)		;get where we left off
+	ld	hl,(PC0)		;get where we left off
 	ld	A,H		;if 0 don't do anything
 	or	L
 	ret z
@@ -162,7 +162,7 @@ $TICK:	pop	hl		;get where it was
 	ld	(hl),a
 ]
 .define ADIW[Value,Location]=[
-	ld hl,	(Location)
+	ld	hl,(Location)
 	ld	de,Value
 	add	hl,de
 	ld	(Location),hl
@@ -181,7 +181,7 @@ $TICK:	pop	hl		;get where it was
 .define MVIWM[Addr,V0,V1,V2,V3,V4,V5,V6,V7]=[
 .ifb	[V0],[.exit]
 	ld	hl,V0
-	ld hl,	(Addr)
+	ld	hl,(Addr)
 	MVIWM	\Addr+1,V1,V2,V3,V4,V5,V6,V7
 ]
 .define QUIET=[
@@ -345,7 +345,7 @@ RSND:	xor	a
 	and	1fh
 	ld	(AC1),a
 ..1:	TICK
-	ld a,	AC1
+	ld	a,(AC1)
 	and	7
 	jr nz,	..on	
 	ld	hl,VOL1

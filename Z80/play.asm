@@ -16,17 +16,17 @@ PLAY:	pop	hl
 	ld	(PlayRet),hl
 	call	CLEAR#		;ERASE Screen
 	call	ROOM#		;DRAW ROOM
-	ld a,	(Demo)		;IF DEMO DONT FLASH MAN
+	ld 	a,(Demo)		;IF DEMO DONT FLASH MAN
 	or	a
 	jr nz,	AGAIN
 ; FLASH MAN
 	call	M.INIT#
 	ld	bc,(16<8)!(1<COLOR)!(1<WRITE)
-	ld a,	(N.PLRS)
+	ld	a,(N.PLRS)
 	cp	2
 	jr z,	..lp
 	ld	B,6		;short flashing
-..lp:	ld	V.STAT(x),c	
+..lp:	ld	(ix+V.STAT),c	
 	WAIT	10
 	ld	a,(1<COLOR)!(1<BLANK)!(1<WRITE)!(1<ERASE)
 	xor	c
@@ -40,7 +40,7 @@ AGAIN:	ei
 	ld(WallPts),a
 	ld	a,90		;(otto resets it)
 	ld	(KWait),a		;killoff wait
-	ld a,	PERCENT		;figure new percent
+	ld	a,(PERCENT)		;figure new percent
 ..ad:	add	a,6
 ..lp:	cp	22+1
 	jr c,	..ok
@@ -72,27 +72,27 @@ AGAIN:	ei
 ; TEST FOR MAN DEAD [GAME OVER]
 ;--------------------------------
 TLOP:	call	NEXT.J#
-	lxi	x,Vectors	;man vector
-	bit	MOVE,0(x)	;if no moving he's dead
+	ld	ix,Vectors	;man vector
+	bit	MOVE,(ix+0)	;if no moving he's dead
 	jp z,	DEAD
-	ld	a,P.Y(x)	;STORE LATEST X AND Y
+	ld	a,(ix+P.Y)	;STORE LATEST X AND Y
 	ld	(ManY),a		;INTO INITIAL X,Y
 	ld	b,a
-	ld	a,P.X(x)
+	ld	a,(ix+P.X)
 	ld	(ManX),a
-	bit	INEPT,0(x)
+	bit	INEPT,(ix+0)
 	jr nz,	NoWAY		;skip tests if man is hit
 	ld	de,AGAIN		;common return address after
 	push	de		;scrolling
 	cp	5
 	jc	OLEFT
 	cp	246
-	jnc	ORIGHT
+	jr nc	ORIGHT
 	ld	a,b
 	cp	5
 	jc	OUP
 	cp	190
-	jnc	ODOWN
+	jr nc	ODOWN
 	pop	de
 ;not off edges
 NoWAY:	call	Awpts		;award wall pts
@@ -115,7 +115,7 @@ NoWAY:	call	Awpts		;award wall pts
 	jp	TLOP
 ;return to go or main
 DEAD:	call	NoSnd#
-	ld hl,	(PlayRet)		;return to caller
+	ld	hl,(PlayRet)		;return to caller
 	jp (hl)
 ;-------------------------
 ; MOVED OFF EDGE ROUTINES
@@ -283,7 +283,7 @@ SHOWS:	xor	a
 	ld	hl,SCORE1
 	ld	B,6
 	call	SHOWN
-	ld a,	N.PLRS
+	ld	a,(N.PLRS)
 	cp	2
 	ret nz	
 	ld	de,213*256+176
@@ -294,7 +294,7 @@ SHOWS:	xor	a
 ;  ->HL AT PLAYERS SCORE
 ;_______________________________
 ScorePtr:
-	ld a,	PLAYER
+	ld	a,(PLAYER)
 	cp	2
 	ld	hl,SCORE2
 	ret z	
@@ -325,7 +325,7 @@ Awpts:	ld	hl,WallPts
 	ld	b,0		;1's
 ..awd:	and	0fh		;isolate score
 	ld	c,a		;save in c for adds
-	ld a,	Wpoint		;multiplier
+	ld	a,(Wpoint)		;multiplier
 ..1:	push	af
 	push	bc
 	call	ADDS		;score 1's
@@ -395,7 +395,7 @@ ADDS:	ld	a,0FFH
 	rrc			;1-10 bcd
 ;now see if time for extra life
 	ld	b,a		;save change
-	ld a,	XtraMen
+	ld	a,(XtraMen)
 	or	a
 	jr z,	..ext
 	sub	b		;b=#of 1k's

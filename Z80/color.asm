@@ -194,16 +194,16 @@ R.set:	inc	hl
 	ld	a,(Flip)
 	or	a
 	ld	hl,ColorScreen
-	lxi	x,ScreenRAM
+	ld	ix,ScreenRAM
 	jr z,	Ok
 	ld	hl,ColorScreen+4*32
-	lxi	x,ScreenRAM+16*Hsize
+	ld	ix,ScreenRAM+16*Hsize
 Ok:	ld	a,208/4		;number of lines of room
 ..y:	ex af,af'
 	ld	B,Hsize
-..x:	ld	a,0(x)		;get screen
-	xor	Hsize(x)
-	or	Hsize(x)
+..x:	ld	a,(ix+0)		;get screen
+	xor	(ix+Hsize)
+	or	(ix+Hsize)
 ;nibble results 0=no wall, 9=cross, others=reflecto
 	ld	d,a		;save
 	and	0fh		;isolate lower nibble
@@ -212,14 +212,14 @@ Ok:	ld	a,208/4		;number of lines of room
 	jr	..LOW	
 ..lr:	cp	0fh
 	jr nz,	..gry
-	xor	0(x)
+	xor	(ix+0)
 	and	0fh
 	jr nz,	..c1
-	ld a,	Dcolor
+	ld	a,(Dcolor)
 	jr	..LOW
 ..c1:	cp	0Fh
 	jr z,	..gry
-	ld a,	(Wcolor)		;get wall color
+	ld	a,(Wcolor)		;get wall color
 	jr	..LOW
 ..gry:	ld	a,WHITE
 ..LOW:	and	0fh
@@ -231,24 +231,24 @@ Ok:	ld	a,208/4		;number of lines of room
 	jr	..top	
 ..tr:	cp	0f0h
 	jr nz,	..tig
-	xor	0(x)
+	xor	(ix+0)
 	and	0f0h
 	jr nz,	..c2
-	ld a,	Dcolor
+	ld	a,(Dcolor)
 	jr	..top
 ..c2:	cp	0F0h
 	jr z,	..tig
-	ld a,	(Wcolor)		;get wall color
+	ld	a,(Wcolor)		;get wall color
 	jr	..top
 ..tig:	ld	a,WHITE
 ..TOP:	and	0F0h
 	or	e		;or in lower
 	ld	(hl),A		;write to colorRAM
 	inc	hl
-	inx	x
+	inc	ixx
 	djnz	..x
 	ld	de,Hsize*3
-	dadx	d
+	add	ix,de
 	ex af,af'
 	dec	a
 	jr nz,	..y
@@ -262,7 +262,7 @@ UNCMAN::
 	ret z
 	res	BLANK,(hl)
 ;restore old area of man
-	ld hl,	(Caddr)
+	ld	hl,(Caddr)
 	ld	de,Csave		;save area
 	ld	bc,Hsize-1	;move to next line
 	ld	a,5		;is 5 x 4 high
@@ -314,7 +314,7 @@ COLMAN::
 	add	hl,bc
 ; save/write box to screen
 	ld	(Caddr),hl		;save address of box
-	ld a,	Mcolor		;get player color
+	ld	a,(Mcolor)		;get player color
 	ld	c,a		;save new color
 	ld	de,Csave
 	ld	a,5		;number of bytes high
@@ -335,7 +335,7 @@ COLMAN::
 	ex af,af'
 	dec	a
 	jr nz,	..Ylp
-	ld hl,	(V.PTR)
+	ld	hl,(V.PTR)
 	ret
 
 ;THIS SHOULD BE IN PLAY

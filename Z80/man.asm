@@ -19,7 +19,7 @@ LEFT	==	0
 ; initialize
 ;_____________
 MAN::	call	M.INIT
-	ld	V.STAT(x),(1<InUse)!(1<Color)!(1<Move)!(1<Write)
+	ld	(ix+V.STAT),(1<InUse)!(1<Color)!(1<Move)!(1<Write)
 	ld	bc,-1		;tracker
 	call	GetTimer#
 	ex de,hl
@@ -30,9 +30,9 @@ MAN::	call	M.INIT
 ;de->timer
 ;ix->vector
 C.LOOP: call	Man.Next
-	bit	INEPT,V.STAT(x) ; check if alive
+	bit	INEPT,(ix+V.STAT) ; check if alive
 	jr nz,	DEAD
-	ld a,	Demo		;check for demo
+	ld	a,(Demo)		;check for demo
 	or	a
 	jr z,	..real
 ;automatic demo mode
@@ -41,7 +41,7 @@ C.LOOP: call	Man.Next
 	jr z,	..new
 	ld	a,c
 	jr	ARGH
-..new:	ld hl,	(DemoPtr)
+..new:	ld	hl,(DemoPtr)
 	ld	a,(hl)
 	inc	hl
 	ld	(DemoPtr),hl
@@ -66,12 +66,12 @@ TRY.F:	ld	b,a		;save control
 	or	a
 	jr nz,	..0
 	xor	a
-	lxi	y,BUL1		;bolt one available?
-	or	0(y)		;check Vxy.len
+	ld	iy,BUL1		;bolt one available?
+	or	(iy+0)		;check Vxy.len
 	jr z,	FIRE		;then fire
-	lxi	y,BUL1+Blength	;bolt 2 available?
+	ld	iy,BUL1+Blength	;bolt 2 available?
 	xor	a
-	or	0(y)
+	or	(iy+0)
 	jr z,	FIRE
 ..0:	ld	a,0
 	jr	ARGH		;none available=loop
@@ -93,17 +93,17 @@ FIRE:	ld	a,b		;last control
 	add	hl,de		;2 per entry
 	add	hl,de		;4
 	add	hl,de		;6
-	ld	V.X(x),0	;set velocitys to 0
-	ld	V.Y(x),0
+	ld	(ix+V.X),0	;set velocitys to 0
+	ld	(ix+V.Y),0
 	ld	a,(hl)		;get shoot animation table
 	inc	hl
 	di
-	ld	D.P.L(x),A
+	ld	(ix+D.P.L),A
 	ld	a,(hl)
 	inc	hl
-	ld	D.P.H(x),A
+	ld	(ix+D.P.H),A
 	ei
-	ld	TIME(x),1
+	ld	(ix+TIME),1
 	pop	de		;restore ->timer
 	ex de,hl
 	ld	(hl),2		;wait for 2 ints
@@ -120,13 +120,13 @@ FIRE:	ld	a,b		;last control
 	ld	a,(hl)		;vx.vy for bullet
 	or	6		;length of bolt
 	ld	d,a		;vxy.len
-	ld	a,P.X(x)	;load mans x position
+	ld	a,(ix+P.X)	;load mans x position
 	add	a,b		;add x offset
 	ld	e,a		;px
-	ld	a,P.Y(x)	;load mans y position
+	ld	a,(ix+P.Y)	;load mans y position
 	add	a,c		;add y offset
 	ld	c,a		;py
-	push	Y
+	push	iy
 	pop	hl
 	ld	b,BLength
 	xor	a
@@ -134,11 +134,11 @@ FIRE:	ld	a,b		;last control
 	inc	hl
 	djnz	..zap
 	di
-	ld	0(y),D		;head vx.vy
-	ld	1(y),E		;set px	 py for head
-	ld	2(y),C
-	ld	3(y),E		;set px	 py for tail
-	ld	4(y),C
+	ld	(iy+0),D		;head vx.vy
+	ld	1(iy),E		;set px	 py for head
+	ld	2(iy),C
+	ld	3(iy),E		;set px	 py for tail
+	ld	4(iy),C
 	ei
 	ld	c,00		;set automatic fire
 	pop	hl		;->timer
@@ -164,8 +164,8 @@ CDIR:	push	de		;save timer->
 	inc	hl
 	ld	h,(hl)
 	di
-	ld	D.P.L(x),A
-	ld	D.P.H(x),H
+	ld	(ix+D.P.L),A
+	ld	(ix+D.P.H),H
 	ei
 	pop	de		;restore timer->
 	ret
@@ -178,23 +178,23 @@ DEAD:	call	SFRY#
 	ex de,hl
 	ld	(hl),150		;electrocution timer
 ..wlp:	call	Man.Next
-	ld a,	Mcolor		;get man color
+	ld	a,(Mcolor)		;get man color
 	add	a,55h		;change for explosion
 	or	88h
 	ld	(Mcolor),a
 	ld	a,(hl)
 	or	a
 	jr nz,	..wlp
-	ld	V.STAT(x),(1<InUse)!(1<BLANK)!(1<ERASE)
+	ld	(ix+V.STAT),(1<InUse)!(1<BLANK)!(1<ERASE)
 ..lp:	call	Man.Next
-	bit	ERASE,V.STAT(x)
+	bit	ERASE,(ix+V.STAT)
 	jr nz,	..lp
 	ld	(hl),30
 ..wt:	call	Man.Next
 	ld	a,(hl)
 	or	a
 	jr nz,	..wt
-	ld	V.STAT(x),0	;free the vector
+	ld	(ix+V.STAT),0	;free the vector
 	xor	a
 	ld	(Man.Alt),a		;don't do me anymore
 ..end:	call	Man.Next
@@ -205,15 +205,15 @@ DEAD:	call	SFRY#
 M.INIT:
 	call	V.ZERO		;ix->vector
 ; man must be first vector
-	ld a,	PLAYER
+	ld	a,(PLAYER)
 	cp	1
 	ld	a,M1color
 	jr z,	..s
 	ld	a,M2color
 ..s:	ld	(Mcolor),a		; set color of man
 	ld hl, (ManX)		;gets x and y position
-	ld	P.X(x),L	;set x
-	ld	P.Y(x),H	;set y
+	ld	(ix+P.X),L	;set x
+	ld	(ix+P.Y),H	;set y
 	ld	a,l		;swap h:l
 	ld	l,h
 	ld	h,a
@@ -222,8 +222,8 @@ M.INIT:
 	set	ManP,(hl)		;warns robots to stay away
 	xor	a		;stand still
 	call	CHANGE		;set up vector
-	ld	TPRIME(x),1
-	ld	TIME(x),1
+	ld	(ix+TPRIME),1
+	ld	(ix+TIME),1
 	ld	a,0aah		;force man to plot
 	ld	(IntTyp),a
 	ret
@@ -242,8 +242,8 @@ V.ZERO: ld	hl,Vectors	;->vector area
 ..ok:	push	hl		;->your new vector
 	ld	bc,VLEN		;# of bytes to zero
 	call	Zap#		;zero the vector
-	pop	x		;save vector pointer in x
-	set	InUse,V.STAT(x)
+	pop	ix		;save vector pointer in x
+	set	InUse,(ix+V.STAT)
 	or	a		;normal return
 	ret
 ;~~~~~~~~~~~~~~~~~~

@@ -83,7 +83,7 @@ GO::
 	ld	hl,StartB
 	set	7,(hl)		;no jump while playing
 	call	SET1		;reset everything
-	ld a,	StartB
+	ld	a,(StartB)
 	ld	l,a
 	call	DECCRD		;take away 1st player credit
 	bit	1,L		;test for 2 player button
@@ -108,9 +108,9 @@ GO::
 	ld	de,PLAYER
 	ld	hl,Idata
 	ldir			;initial the player
-	ld hl,	(SEED)
+	ld	hl,(SEED)
 	ex de,hl
-	ld hl,	(OnTime+10)	;part of second count
+	ld	hl,(OnTime+10)	;part of second count
 	add	hl,de
 	ld	(SEED),hl		;new random room
 	ld	(RoomX),hl
@@ -130,21 +130,21 @@ GO::
 	ld	a,2		;SET AS PLAYER NUMBER 2
 	ld	(hl),a
 ; Turn second player off if 1 player game
-	ld a,	N.PLRS
+	ld	a,(N.PLRS)
 	cp	2
 	jr z,	SLOP
 	xor	a		;if no deaths
 	ld	(DEATH2),a		; then no playing either
 SLOP:	ei
-	ld hl,	(Manxi)
+	ld	hl,(Manxi)
 	ld	(ManX),hl
-	ld a,	PLAYER
+	ld	a,(PLAYER)
 ; Play out one life
 	call	PLAY
 	call	RANDOM
 	WAIT	90		;pause to show trouble
 	call	REST		;stop moving stuff on screen
-	ld hl,	(SEED)		;goto a new random room
+	ld	hl,(SEED)		;goto a new random room
 	ld (RoomX),hl
 	ld	hl,DEATHS	;take away a life
 	dec	(hl)

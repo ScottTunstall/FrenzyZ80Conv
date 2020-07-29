@@ -84,7 +84,7 @@ GOVER:	call	CLEAR		; erase.screen
 	ld	a,d
 	add	a,12
 	ld	d,a
-	ld a,	TEMP
+	ld	a,(TEMP)
 	add	a,1
 	daa
 	ld  (TEMP),A
@@ -141,7 +141,7 @@ E.L:	push	de
 SFLIP:	in	a,(I.O3)		;is it a cocktail
 	bit	7,A
 	jr nz,	Normal		;if not cocktail
-	ld a,	PLAYER		;is cocktail version
+	ld	a,(PLAYER)		;is cocktail version
 	cp	2		;flip screen? for player2
 	jr nz,	Normal
 	ld	a,8		;the flip bit

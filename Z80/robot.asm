@@ -17,17 +17,17 @@ B>type robot.asm
 MinWait=	30		;Harder 3/12/82
 FROBOT::call	V.ZERO		;get vector
 	JC	JobDel#		;if non leave
-	ldar
+	ld	a,r
 	rrc
 	jr c,	..2
 	call	F1.TALK#
 	jr	..1
 ..2:	call	F2.TALK#
-..1:	ld	P.X(x),146	;start pos
-	ld	P.Y(x),104
+..1:	ld	(ix+P.X),146	;start pos
+	ld	(ix+P.Y),104
 	ld	hl,R.LAY#
-	ld	D.P.L(x),l
-	ld	D.P.H(x),h
+	ld	(ix+D.P.L),l
+	ld	(ix+D.P.H),h
 	ld	c,0
 	jr	RGO
 ROBOT::
@@ -37,7 +37,7 @@ ROBOT::
 	inc	(hl)		;inc number of robots
 	ld	a,(hl)
 	ld	(Rsaved),a		;save number of robots
-	ldar
+	ld	a,r
 	and	1
 	jr nz,	SKEL#
 ; find a spot to put me
@@ -45,11 +45,11 @@ ROBOT::
 	xor	a		;stop mode
 	ld	c,-1		;force on
 	call	SETPAT		; set up vector
-RGO:	ld	TPRIME(x),2	;standard wait time
-	ld	TIME(x),1	;update
-	ld	V.STAT(x),86h	;write|move
+RGO:	ld	(ix+TPRIME),2	;standard wait time
+	ld	(ix+TIME),1	;update
+	ld	(ix+V.STAT),86h	;write|move
 	call	GetTimer#
-	ld a,	Rwait		;initial hold off
+	ld	a,(Rwait)		;initial hold off
 	cp	MinWait
 	jr nc,	..1		;safety 1st
 	ld	a,MinWait	;minimum wait
@@ -63,7 +63,7 @@ RGO:	ld	TPRIME(x),2	;standard wait time
 	add	a,b
 	ld	(hl),a
 ..wlp:	call	NEXT.J
-	bit	INEPT,V.STAT(x)
+	bit	INEPT,(ix+V.STAT)
 	jr nz,	..blam
 	ld	a,(hl)
 	or	a
@@ -75,11 +75,11 @@ RGO:	ld	TPRIME(x),2	;standard wait time
 ;-----------------+
 ; ix->vector
 ; hl->timer
-SEEK:	lxi	y,Vectors	;mans vector
+SEEK:	ld	iy,Vectors	;mans vector
 	push	bc		;save tracker
 ; test if anything happened first??
-	ld	a,P.X(y)	;man x
-	sub	P.X(x)		;robot x
+	ld	a,P.X(iy)	;man x
+	sub	(ix+P.X)		;robot x
 	ld	d,a		;save delta x
 ;calc x index
 	ld	bc,0		;0 velocity in x
@@ -87,9 +87,9 @@ SEEK:	lxi	y,Vectors	;mans vector
 	ld	B,1		;-	"	in x
 	jr c,	..dx
 	ld	B,2		;+	"	in x
-..dx:	ld	a,P.Y(y)	;man y
+..dx:	ld	a,P.Y(iy)	;man y
 	add	a,2
-	sub	P.Y(x)		;robot y
+	sub	(ix+P.Y)		;robot y
 	ld	e,a		;save delta y
 ;calc y index
 	jr z,	..dy
@@ -102,7 +102,7 @@ SEEK:	lxi	y,Vectors	;mans vector
 	call	SHOOT		;need hl->timer
 	call	SETPAT		;does IQ
 	call	NEXT.J
-R.RET:: bit	INEPT,V.STAT(x)
+R.RET:: bit	INEPT,(ix+V.STAT)
 	jz	SEEK
 	jr	BLAM
 ;-----------------------------+
@@ -118,7 +118,7 @@ SETPAT: push	hl
 ..1:	and	0Fh		;check for no moving
 	jr z,	..2
 	bit	0,(hl)		;no iq
-	cz	IQ		;then check walls returns a
+	call z,	IQ		;then check walls returns a
 ..2:	cp	c		;if tracker and new direction
 	jr z,	..exit		;are the same then return
 	ld	c,a		;update tracker
@@ -129,8 +129,8 @@ SETPAT: push	hl
 	inc	hl
 	ld	h,(hl)
 	di
-	ld	D.P.L(x),A	;set pattern
-	ld	D.P.H(x),H
+	ld	(ix+D.P.L),A	;set pattern
+	ld	(ix+D.P.H),H
 	ei
 ..exit: pop	hl
 	ret
@@ -161,8 +161,8 @@ BLAM::	call	FreeTimer#
 	inc	hl
 	ld	(hl),b
 	ei
-	ld	TIME(x),1
-	ld	TPRIME(x),1
+	ld	(ix+TIME),1
+	ld	(ix+TPRIME),1
 	push	x		;->vector
 	ld	bc,105H		;50
 	call	ADDS
@@ -173,7 +173,7 @@ BLAM::	call	FreeTimer#
 	dec	(hl)		;one less robot
 	ld	(STIME),a		;new robot hold off
 	jr nz,	XXX		;if all killed then
-	ld a,	Rsaved		;get original number of robots
+	ld	a,(Rsaved)		;get original number of robots
 SCLOP:	push	af
 	ld	bc,101H		;score 10 for each killed
 	call	ADDS
@@ -186,7 +186,7 @@ SCLOP:	push	af
 	.asciz	"BONUS"
 ; show how much
 	push	af
-	ld a,	Rsaved
+	ld	a,(Rsaved)
 	ld	b,a		;convert to BCD
 	xor	a		;0
 ..:	add	a,1		;+1
@@ -210,18 +210,18 @@ SCLOP:	push	af
 	ld	B,4
 	call	SHOWO
 	pop	hl		;remove number from stack
-XXX:	pop	x
+XXX:	pop	ix
 	WAIT	30
 ..test: ld	hl,R.9D
-	ld	a,O.P.L(x)	;see if on last pattern
+	ld	a,O.P.L(ix)	;see if on last pattern
 	cp	l
 	jr nz,	..no
-	ld	a,O.P.H(x)
+	ld	a,O.P.H(ix)
 	cp	h
 	jr z,	..done
 ..no:	call	NEXT.J
 	jr	..test
-..done: ld	V.STAT(x),0	;free vector
+..done: ld	(ix+V.STAT),0	;free vector
 	jp	JobDel		;delete job
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Find a spot for this robot to start
@@ -251,10 +251,10 @@ InitPosition::
 	ld	e,(hl)
 	call	Rand27
 	add	a,d
-	ld	P.X(x),a	;set position
+	ld	(ix+P.X),a	;set position
 	call	Rand27
 	add	a,e
-	ld	P.Y(x),a
+	ld	(ix+P.Y),a
 	ret
 Rand27: push	de
 	call	RANDOM

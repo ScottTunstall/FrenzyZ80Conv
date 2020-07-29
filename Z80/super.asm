@@ -33,9 +33,9 @@ SUPER::
 	jr c,	..t
 	ld	H,160
 ..T:	ld(SSpos),hl
-	ld a,	Rsaved		; calc time til start
+	ld	a,(Rsaved)		; calc time til start
 	ld	b,a
-	ld a,	Rwait
+	ld	a,(Rwait)
 	rrc
 	rrc
 	and	7
@@ -47,7 +47,7 @@ SUPER::
 	ld	hl,STIME
 	dec	(hl)
 	jr nz,	..LOOP
-	ld hl,	(SSpos)		;super start pos
+	ld	hl,(SSpos)		;super start pos
 	ld	a,30
 	ld	(KWait),a
 	jr	INIT
@@ -77,30 +77,30 @@ INIT:	push	de
 	WAIT	60
 	ld	h,b
 	ld	l,c		;start position
-REDO:	ld	P.X(x),L	;set pos
-	ld	P.Y(x),H
+REDO:	ld	(ix+P.X),L	;set pos
+	ld	(ix+P.Y),H
 	xor	a
-	ld	V.X(x),a
-	ld	V.Y(x),a
+	ld	(ix+V.X),a
+	ld	(ix+V.Y),a
 	ld	hl,SR.0
-	ld	D.P.L(x),L
-	ld	D.P.H(x),H
-	ld	TIME(x),1
-	ld	TPRIME(x),2	;slower than normal
+	ld	(ix+D.P.L),L
+	ld	(ix+D.P.H),H
+	ld	(ix+TIME),1
+	ld	(ix+TPRIME),2	;slower than normal
 	ld	d,0		;number of hits taken
-	ld	V.STAT(x),(1<InUse)!(1<Move)!(1<Write)
+	ld	(ix+V.STAT),(1<InUse)!(1<Move)!(1<Write)
 	xor	a
 	call	SETDIR
 	WAIT	60
-	res	HIT,V.STAT(x)
+	res	HIT,(ix+V.STAT)
 ;------------------------+
 ; super robot's job loop |
 ;------------------------+
-SEEK:	lxi	y,Vectors	; mans vector
+SEEK:	ld	iy,Vectors	; mans vector
 	push	de
 ;calc delta x => e
-	ld	a,P.X(y)	;man x
-	sub	P.X(x)		;robot x
+	ld	a,P.X(iy)	;man x
+	sub	(ix+P.X)		;robot x
 ;calc x index
 	ld	B,0		;0 velocity in x
 	jr z,	X.D
@@ -110,14 +110,14 @@ SEEK:	lxi	y,Vectors	; mans vector
 	neg
 ;calc delta y => d
 X.D:	ld	d,a		;save |delta X|
-	ld	a,P.Y(y)	;mans Y
+	ld	a,P.Y(iy)	;mans Y
 	add	e		;drift down with speed
 	ld	e,d		;save delta in right place
 	sub	1
 	cp	175+1
 	jc	..ok		;adjust mans x
 	ld	a,175
-..ok:	sub	P.Y(x)
+..ok:	sub	(ix+P.Y)
 ;calc y index
 	ld	c,0		;0 velocity in y
 	jr z,	Y.D
@@ -132,9 +132,9 @@ Y.D:	ld	d,a		;save abs(delta Y)
 	ld	c,e
 	pop	de		;speed
 	call	SETDIR
-	bit	HIT,V.STAT(x)	;check for hits
+	bit	HIT,(ix+V.STAT)	;check for hits
 	jr z,	..wait
-	res	HIT,V.STAT(x)	;reset hit bit
+	res	HIT,(ix+V.STAT)	;reset hit bit
 	call	SBLAM#		;hit sound
 	inc	d		;number of hits taken
 	push	de
@@ -143,9 +143,9 @@ Y.D:	ld	d,a		;save abs(delta Y)
 	dec	d
 	jp z,	..stdp
 	ld	hl,SR.2#
-..stdp: ld	D.P.L(x),L
-	ld	D.P.H(x),H
-	ld	TIME(x),1
+..stdp: ld	(ix+D.P.L),L
+	ld	(ix+D.P.H),H
+	ld	(ix+TIME),1
 	ld	bc,102h		;50pts
 	call	ADDS#
 	pop	de
@@ -158,24 +158,24 @@ Y.D:	ld	d,a		;save abs(delta Y)
 ;	Otto Deflates
 ;_______________________________
 DIE:	xor	a
-	ld	V.X(x),a
-	ld	V.Y(x),a
+	ld	(ix+V.X),a
+	ld	(ix+V.Y),a
 	cpl
 	ld	(CACKLE+1),a	;otto death flag
 	call	SD.TALK#
 	ld	hl,SR.3#
-	ld	D.P.L(x),L
-	ld	D.P.H(x),H
-	ld	TPRIME(x),4	;real slow
+	ld	(ix+D.P.L),L
+	ld	(ix+D.P.H),H
+	ld	(ix+TPRIME),4	;real slow
 	WAIT	60
-	ld	V.STAT(x),(1<InUse)!(1<Erase)
+	ld	(ix+V.STAT),(1<InUse)!(1<Erase)
 	WAIT	10
 ; start a new otto
 	ld	a,e
 	cp	7
 	jr nc,	..n
 	inc	e		;up the speed
-..n:	ld hl,	(SSpos)
+..n:	ld	hl,(SSpos)
 	jp	REDO
 ;-----------------------------
 ; change direction of robot
@@ -194,7 +194,7 @@ SETDIR: and	0FH		; SUPER ROBOTS VERSION
 	add	hl,bc
 	add	hl,bc
 	ld	a,(hl)
-	ld	TPRIME(x),a
+	ld	(ix+TPRIME),a
 	inc	hl
 	ld	a,(hl)		;speed
 ; now set vel
@@ -221,8 +221,8 @@ SETDIR: and	0FH		; SUPER ROBOTS VERSION
 	ld	c,a
 	ex af,af'
 ..sv:
-SETV:	ld	V.X(x),c
-	ld	V.Y(x),b
+SETV:	ld	(ix+V.X),c
+	ld	(ix+V.Y),b
 	ret
 
 ; normal robot version
@@ -235,10 +235,10 @@ SETVXY: ld	c,a		;update tracker
 	ld	hl,M.TAB		;index move table
 	add	hl,de
 	ld	a,(hl)		;get vx
-	ld	V.X(x),a
+	ld	(ix+V.X),a
 	inc	hl
 	ld	a,(hl)		;get vy
-	ld	V.Y(x),a
+	ld	(ix+V.Y),a
 	ret
 ;----------------------
 ;  move table

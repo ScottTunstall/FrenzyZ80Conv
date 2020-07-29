@@ -34,7 +34,7 @@ GREY	==	77H		;mirror color
 ;_______________________________
 BUL.V:: exx
 	push	bc		;set up wall color in alt set
-	ld a,	(Wcolor)
+	ld	a,(Wcolor)
 	ld	b,a		;save
 	and	0F0H		;hi nib in C
 	ld	c,a
@@ -101,7 +101,7 @@ VEC.B:
 	jr nz,	..ok
 	ld	hl,-1
 	add	hl,de
-	dsbc	b		;->vxy.len
+	sbc	hl,bc		;->vxy.len
 	dec	(hl)		;one less in length
 	RET
 ; Move array of old positions down
@@ -268,7 +268,7 @@ Writ:	ld	(hl),b		;update py
 	or	a
 	jp z,	..norm
 	ld	hl,EndColor
-	dsbc	b		;subtract box offset
+	sbc	hl,bc		;subtract box offset
 	pop	bc		;restore YX
 	ex af,af'
 	ccf			;complement hi/lo
@@ -310,7 +310,7 @@ REFLECT:
 	ld	a,(de)		;get vxy
 	and	0C0h		;check for any up/down
 	jr z,	..Ve		;right/left hit only verticals
-	ld hl,	(Temp)		;get magic address
+	ld	hl,(Temp)		;get magic address
 	res	5,h		;convert to normal
 	ld	a,(hl)		;get pixels of wall
 	ld	h,90h		;left nibble test
@@ -427,7 +427,7 @@ WallHit:
 ..auk:	ld	a,(hl)		;get 2 color boxes
 	and	d		;mask valid part
 	ld	d,a		;save
-	ld a,	Rcolor		;get robot color
+	ld	a,(Rcolor)		;get robot color
 	and	e		;isolate nibble
 	or	d		;combine nibbles
 	ld	(hl),a		;store new color
@@ -470,10 +470,10 @@ HITCHK:
 	and	0fh		;stop it
 	ld	(de),a		;store 0,len
 	ld	a,MaxVec	;number of vectors to check
-	lxi	x,Vectors	;->first vector
+	ld	ix,Vectors	;->first vector
 ..LOOP:
 	ex af,af'			;save count
-	bit	Move,V.Stat(x)	;check if moving
+	bit	Move,(ix+V.STAT)	;check if moving
 	jp z,	..next
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Check Vector[ix] Against Bolt
@@ -481,21 +481,21 @@ HITCHK:
 ;NOTE: should mans bolt kill him?
 ;ix->object, BC=YX, a'=counter
 	ld	a,c		;bolt X
-	sub	P.X(x)		;object Y
+	sub	(ix+P.X)		;object Y
 	inc	a
 ;	ld	c,a		;save it
 	jr m,	..next		;outside on left?
 	cp	10		;max width
 	jr nc,	..next		;ok in x
 	ld	a,b		;now do y
-	sub	P.Y(x)
+	sub	(ix+P.Y)
 	inc	a
 	jr m,	..next
 	cp	30
-	jnc	..next
+	jr nc	..next
 ;check with real pattern size
-	ld	h,D.P.H(x)	;get pattern pointer
-	ld	l,D.P.L(x)
+	ld	h,(ix+D.P.H)	;get pattern pointer
+	ld	l,(ix+D.P.L)
 	ld	e,(hl)		;get address of pattern
 	inc	hl
 	ld	d,(hl)
@@ -519,10 +519,10 @@ HITCHK:
 	inc	d
 ; now check if bolt y is in pattern
 	cp	d		;a still y delta
-	jnc	..next
+	jr nc	..next
 ;now x NOT NEEDED ALL ARE 8 WIDE
 ;	ld	a,c		;restore delta
-;	sub	P.X(x)
+;	sub	(ix+P.X)
 ;	sla	e		;multiply X.size**NEW
 ;	sla	e		;by 8 cuz of 8 bits to byte
 ;	sla	e		;of pattern
@@ -530,14 +530,14 @@ HITCHK:
 ;	cp	e		;is in past right side?
 ;	jr nc,	..next
 ; hit this vector, so set his inept bit
-	set	Hit,V.STAT(x)
-	set	INEPT,V.STAT(x) ;cause an explosion
+	set	Hit,(ix+V.STAT)
+	set	INEPT,(ix+V.STAT) ;cause an explosion
 	RET			;leave loop
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;	End of Loop
 ;_______________________________
 ..next: ld	de,VLEN		;distance to
-	dadx	d		;next vector
+	add	ix,de		;next vector
 ..exit: ex af,af'			;get counter
 	dec	a		;any more vectors left?
 	jr nz,	..LOOP		;if not,go check this one
