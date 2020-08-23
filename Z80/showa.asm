@@ -54,11 +54,11 @@ RtoA::	ld	a,(Flip)
 	or	b
 	out	(MAGIC),a		; set magic register
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	ld	bc,MagicScreen
 	add	hl,bc
 	ret
@@ -68,11 +68,11 @@ RtoA::	ld	a,(Flip)
 	set	FLOP,A
 	out	(MAGIC),a		; set magic register
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	ld	b,h
 	ld	c,l
 	ld	hl,Hsize*224+MagicScreen-1

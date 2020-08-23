@@ -305,11 +305,11 @@ COLMAN::
 	ld	h,a
 	ld	l,e
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	srl	H
-	rarr	L
+	rr	L
 	ld	bc,ColorScreen
 	add	hl,bc
 ; save/write box to screen
